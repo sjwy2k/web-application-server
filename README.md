@@ -39,5 +39,5 @@ Hello World 신재원!
 ### 요구사항 6 - stylesheet 적용
 * 
 
-### heroku 서버에 배포 후
+### aws 서버에 배포 후
 * 
