@@ -25,16 +25,16 @@ Hello World 신재원!
 * 211229 응답 완료
 
 ### 요구사항 2 - get 방식으로 회원가입
-* 
+* 220101 완료
 
 ### 요구사항 3 - post 방식으로 회원가입
-* 
+* 220107 form전송시 DataBase class에 등록 (메모리 영역)
 
 ### 요구사항 4 - redirect 방식으로 이동
-* 
+* 220107 302 redirect 구현
 
 ### 요구사항 5 - cookie
-* 
+* 220107 cookie = logined header에 전송 성공
 
 ### 요구사항 6 - stylesheet 적용
 * 
