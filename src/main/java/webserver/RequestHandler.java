@@ -69,6 +69,11 @@ public class RequestHandler extends Thread {
         		log.debug("User : {}", user);
         		DataOutputStream dos = new DataOutputStream(out);
         		response302Header(dos, "/index.html");
+        	} else if (url.endsWith(".css")) {
+        		DataOutputStream dos = new DataOutputStream(out);
+        		byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
+        		response200CssHeader(dos, body.length);
+        		responseBody(dos, body);
         	} else if ("/user/login".equals(url)) {
         		String body = IOUtils.readData(br, contentLength);
         		Map<String, String> params
@@ -122,7 +127,18 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private boolean isLogin(String line) {
+    private void response200CssHeader(DataOutputStream dos, int lengthOfBodyContents) {
+    	try {
+    		dos.writeBytes("HTTP/1.1 200 OK \r\n");
+    		dos.writeBytes("Content-Type: text/css\r\n");
+    		dos.writeBytes("Content-Length: " + lengthOfBodyContents + "\r\n");
+    		dos.writeBytes("\r\n");
+    	} catch (IOException e) {
+    		log.error(e.getMessage());
+    	}
+	}
+
+	private boolean isLogin(String line) {
     	String[] headerTokens = line.split(":");
     	Map<String, String> cookies
     		= HttpRequestUtils.parseCookies(headerTokens[1].trim());
