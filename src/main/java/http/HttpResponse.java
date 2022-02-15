@@ -1,4 +1,4 @@
-package util;
+package http;
 
 public class HttpResponse {
 
@@ -12,6 +12,11 @@ public class HttpResponse {
 	}
 
 	public void sendRedirect(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void addHeader(String string, String string2) {
 		// TODO Auto-generated method stub
 		
 	}
