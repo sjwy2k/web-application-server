@@ -64,6 +64,16 @@ public class HttpRequest {
 			log.error(io.getMessage());
 		}
 	}
+	
+	public static boolean isLogin(String cookieValue) {
+    	Map<String, String> cookies = 
+    			HttpRequestUtils.parseCookies(cookieValue);
+    	String value = cookies.get("logined");
+    	if (value == null) {
+    		return false;
+    	}
+		return Boolean.parseBoolean(value);
+	}
 
 	
 	/**
@@ -92,9 +102,9 @@ public class HttpRequest {
 
 	
 	/**
-	 * @return String method
+	 * @return HttpMethod method
 	 */
-	public String getMethod() {
+	public HttpMethod getMethod() {
 		return requestLine.getMethod();
 	}
 
