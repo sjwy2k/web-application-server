@@ -43,10 +43,10 @@ public class HttpRequest {
 			processRequestLine(line);
 			
 			line = br.readLine();
-			while (!line.equals("")) {
+			while (line != null && !line.equals("")) {
 				log.debug("header : {}", line);		
-				String[] tokens =  line.split(":");
-				headers.put(tokens[0].trim(), tokens[1].trim());
+				String[] tokens =  line.split(":");				
+				headers.put(tokens[0].trim(), tokens.length > 1 ? tokens[1].trim() : "");
 				line = br.readLine();
 			}				
 			
