@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import db.DataBase;
 import http.HttpRequest;
+import http.HttpResponse;
 import model.User;
 import util.HttpRequestUtils;
 
@@ -33,6 +34,7 @@ public class RequestHandler extends Thread {
         
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
         	HttpRequest request = new HttpRequest(in);
+        	HttpResponse response = new HttpResponse(out);
         	String path = getDefaultPath(request.getPath());
         	
         	if ("/user/create".equals(path)) {
@@ -41,27 +43,27 @@ public class RequestHandler extends Thread {
         				request.getParameter("password"), 
         				request.getParameter("name"),
         				request.getParameter("email"));
+        		log.debug("user : {}", user);
+        		DataBase.addUser(user);
+        		response.sendRedirect("/index.html");
         	} else if ("/user/login".equals(path)) {
         		User user = DataBase.findUserById(request.getParameter("userId"));
-        		log.debug("User : {}", user);
-        		if (user == null) {
-        			log.debug("로그인 실패 - 회원조회 실패");
-        			responseResource(out, "/user/login_failed.html");
-        			return;
-        		}
-        		if (user.getPassword().equals(request.getParameter("password"))) {
-        			log.debug("로그인 성공");
-        			DataOutputStream dos = new DataOutputStream(out);
-        			response302LoginSuccessHeader(dos);
-        		} else {
-        			log.debug("로그인 실패 - 비밀번호 불일치");
-        			responseResource(out, "/user/login_failed.html");
+        		if (user != null) {
+        			if (user.login(request.getParameter("password"))) {
+        				response.addHeader("Set-Cookie", "logined=true; Path=/");
+        				response.sendRedirect("/index.html");
+        			} else {
+        				response.sendRedirect("/user/login_failed.html");        				
+        			}
+        		} else {        			
+        			response.sendRedirect("/user/login_failed.html");
         		}
         	} else if ("/user/list".equals(path)){
-        		if (!HttpRequest.isLogin(request.getHeader("Cookie"))) {
-        			responseResource(out, "/user/login.html");
+        		if (!isLogin(request.getHeader("Cookie"))) {
+        			response.sendRedirect("/user/login.html");
         			return;
         		}
+        		
         		Collection<User> users = DataBase.findAll();
         		StringBuilder sb = new StringBuilder();
         		sb.append("<table border='1'>");
@@ -73,27 +75,24 @@ public class RequestHandler extends Thread {
         			sb.append("</tr>");
         		}
         		sb.append("</table>");
-        		byte[] body = sb.toString().getBytes();
-        		DataOutputStream dos = new DataOutputStream(out);
-        		response200Header(dos, body.length);
-        		responseBody(dos, body);
-        	} else if (path.endsWith(".css")) {
-        		responseCssResource(out, path);        		
+        		response.forwardBody(sb.toString());        		
         	} else {
-        		responseResource(out, path);
+        		response.forward(path);
         	}
-        	
         } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
-
-    private void responseCssResource(OutputStream out, String path) throws IOException {
-    	DataOutputStream dos = new DataOutputStream(out);
-		byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
-		response200CssHeader(dos, body.length);
-		responseBody(dos, body);
-	}
+    
+    private boolean isLogin(String cookieValue) {
+    	Map<String, String> cookies = 
+    			HttpRequestUtils.parseCookies(cookieValue);
+    	String value = cookies.get("logined");
+    	if (value == null) {
+    		return false;
+    	}
+    	return Boolean.parseBoolean(value);
+    }
 
 	private String getDefaultPath(String path) {
     	if (path.equals("/")) {
@@ -101,7 +100,16 @@ public class RequestHandler extends Thread {
     	}
 		return path;
 	}
+	
+	@Deprecated
+	private void responseCssResource(OutputStream out, String path) throws IOException {
+		DataOutputStream dos = new DataOutputStream(out);
+		byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+		response200CssHeader(dos, body.length);
+		responseBody(dos, body);
+	}
 
+	@Deprecated
 	private void response200CssHeader(DataOutputStream dos, int lengthOfBodyContents) {
     	try {
     		dos.writeBytes("HTTP/1.1 200 OK \r\n");
@@ -113,6 +121,7 @@ public class RequestHandler extends Thread {
     	}
 	}
 
+	@Deprecated
 	private void response302LoginSuccessHeader(DataOutputStream dos) {
     	try {
     		dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
@@ -124,6 +133,7 @@ public class RequestHandler extends Thread {
 		}
 	}
 
+	@Deprecated
 	private void responseResource(OutputStream out, String path) throws IOException {
     	DataOutputStream dos = new DataOutputStream(out);
     	byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
@@ -131,6 +141,7 @@ public class RequestHandler extends Thread {
     	responseBody(dos, body);
 	}
 	
+	@Deprecated
 	private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
 		try {
 			dos.writeBytes("HTTP/1.1 200 OK \r\n");
@@ -142,6 +153,7 @@ public class RequestHandler extends Thread {
 		}
 	}
 	
+	@Deprecated
 	private void responseBody(DataOutputStream dos, byte[] body) {
 		try {
 			dos.write(body, 0, body.length);
@@ -151,16 +163,6 @@ public class RequestHandler extends Thread {
 		}
 	}
 	
-	@Deprecated
-	private boolean isLogin(String cookieValue) {
-		Map<String, String> cookies = 
-				HttpRequestUtils.parseCookies(cookieValue);
-		String value = cookies.get("logined");
-		if (value == null) {
-			return false;
-		}
-		return Boolean.parseBoolean(value);
-	}
 
 	@Deprecated
 	private void response302Header(DataOutputStream dos, String url) {
