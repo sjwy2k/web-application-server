@@ -20,11 +20,7 @@ public class HttpRequest {
 	private HttpHeaders headers;
 	
 	private RequestParams requestParams = new RequestParams();
-	
-	public HttpRequest() {
 		
-	}
-	
 	/**
 	 * @param InputStream in
 	 * @author szw

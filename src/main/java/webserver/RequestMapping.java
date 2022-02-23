@@ -12,6 +12,9 @@ import controller.ListUserController;
 import controller.LoginController;
 
 public class RequestMapping {
+	
+	private static final Logger log = 
+			LoggerFactory.getLogger(RequestMapping.class);
 
 	private static Map<String, Controller> controllers = new HashMap<>();
 	
